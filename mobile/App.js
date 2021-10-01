@@ -16,12 +16,8 @@ export default function App() {
     (async () => {
       socket.current = openSocket();
 
-      socket.current.on("connect", () => {
-        setState((currState) => ({
-          ...currState,
-          isConnected: true,
-        }));
-      });
+      socket.current.on("connect", () => onConnectionStateUpdate());
+      socket.current.on("disconnect", () => onConnectionStateUpdate());
 
       /** Here we receive messages from our server through this socket connection*/
       socket.current.on("ping", (msg) => {
@@ -31,7 +27,19 @@ export default function App() {
         }));
       });
     })();
+    return () => {
+      socket.current.off("connect");
+      socket.current.off("disconnect");
+      socket.current.off("ping");
+    };
   }, []);
+
+  const onConnectionStateUpdate = () => {
+    setState((currState) => ({
+      ...currState,
+      isConnected: socket.current.connected,
+    }));
+  };
 
   const submitChatMessage = () => {
     //NOTE: that we use the 'emit' method to send messages
@@ -75,6 +83,9 @@ export default function App() {
 function openSocket() {
   const conn = io(socketUrl, {
     transports: ["websocket"],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 5000,
   });
   return conn;
 }
