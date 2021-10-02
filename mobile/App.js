@@ -1,9 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { StyleSheet, Text, View, TextInput } from "react-native";
-import io from "socket.io-client"; //must use for react native
 
-const socketUrl = "http://127.0.0.1:3000"; //Run ifconfig on Mac or ipconfig on windows to get the ipAddress for your wifi
+const socketUrl = "ws://127.0.0.1:3000"; //Run ifconfig on Mac or ipconfig on windows to get the ipAddress for your wifi
+const CHAT_ACTION = "chat_message";
 export default function App() {
   const socket = React.useRef(null);
   const [state, setState] = React.useState({
@@ -14,36 +14,72 @@ export default function App() {
 
   React.useEffect(() => {
     (async () => {
-      socket.current = openSocket();
+      socket.current = new WebSocket(socketUrl);
 
-      socket.current.on("connect", () => onConnectionStateUpdate());
-      socket.current.on("disconnect", () => onConnectionStateUpdate());
+      socket.current.onopen = () => {
+        onConnectionStateUpdate();
 
-      /** Here we receive messages from our server through this socket connection*/
-      socket.current.on("ping", (msg) => {
-        setState((currState) => ({
-          ...currState,
-          chatMessages: [...currState.chatMessages, msg],
-        }));
-      });
+        //socket.current.send("something"); // send a message
+      };
+
+      //listen for whenever we receive messages
+      socket.current.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        var time = new Date(msg.date);
+
+        switch (msg.type) {
+          case "id":
+            //clientID = msg.id;
+            //setUsername();
+            break;
+          case CHAT_ACTION:
+            setState((currState) => ({
+              ...currState,
+              chatMessages: [...currState.chatMessages, msg],
+            }));
+            break;
+        }
+      };
+
+      socket.current.onerror = (e) => {
+        // an error occurred
+        console.log(e.message);
+      };
+
+      socket.current.onclose = (e) => {
+        onConnectionStateUpdate();
+        // connection closed
+        console.log(e.code, e.reason);
+      };
     })();
     return () => {
-      socket.current.off("connect");
-      socket.current.off("disconnect");
-      socket.current.off("ping");
+      socket.current.close();
     };
   }, []);
 
   const onConnectionStateUpdate = () => {
-    setState((currState) => ({
-      ...currState,
-      isConnected: socket.current.connected,
-    }));
+    if (socket.current.readyState === socket.current.CLOSED) {
+      setState((currState) => ({
+        ...currState,
+        isConnected: false,
+      }));
+    } else if (socket.current.readyState === socket.current.OPEN) {
+      setState((currState) => ({
+        ...currState,
+        isConnected: true,
+      }));
+    }
   };
 
   const submitChatMessage = () => {
-    //NOTE: that we use the 'emit' method to send messages
-    socket.current.emit("chat_message", state.chatMessage);
+    const msg = {
+      type: CHAT_ACTION,
+      text: state.chatMessage,
+      //id: clientID,
+      date: Date.now(),
+    };
+    socket.current.send(JSON.stringify(msg));
+
     setState((currState) => ({
       ...currState,
       chatMessage: "",
@@ -70,10 +106,10 @@ export default function App() {
       {chatMessages.map((chatMessage) => (
         <Text
           key={
-            chatMessage /**ideally your will have your uniqueId for the chat message here :) */
+            `${chatMessage.date}` /**ideally your will have your uniqueId for the chat message here :) */
           }
         >
-          {chatMessage}
+          {chatMessage.text}
         </Text>
       ))}
     </View>

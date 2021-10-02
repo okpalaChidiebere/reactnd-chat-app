@@ -8,7 +8,7 @@ More UseFul Links here
 - [https://github.com/expo/examples/tree/master/with-socket-io](https://github.com/expo/examples/tree/master/with-socket-io)
 - [https://brentmarquez.com/uncategorized/how-to-get-socket-io-to-work-with-react-native/](https://brentmarquez.com/uncategorized/how-to-get-socket-io-to-work-with-react-native/)
 - [https://socket.io/docs/v4/](https://socket.io/docs/v4/)
-- I will always sugges you use socket.io-client for react native but if you want to use pure js look at [https://reactnative.dev/docs/network](https://reactnative.dev/docs/network), look at [here](https://github.com/hnasr/javascript_playground/blob/master/websocket-demo/index.js) as well
+- if you want to use pure js look at [How to implement WebSockets in React Native](https://blog.logrocket.com/how-to-implement-websockets-in-react-native/), [https://reactnative.dev/docs/network](https://reactnative.dev/docs/network), look at [here](https://github.com/hnasr/javascript_playground/blob/master/websocket-demo/index.js) as well
 - [Writing WebSocket client applications](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)
 - [https://github.com/socketio/socket.io/blob/master/examples/react-native/App.js](https://github.com/socketio/socket.io/blob/master/examples/react-native/App.js)
 

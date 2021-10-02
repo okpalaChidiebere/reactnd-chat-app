@@ -1,31 +1,32 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const WebSocket = require("ws"); //https://www.npmjs.com/package/ws
+
+const port = 3000;
 
 const app = express();
 const server = http.createServer(app);
-const port = 3000;
+const wss = new WebSocket.Server({ server });
 
-const io = new Server(server, {
-  cors: {
-    methods: ["GET", "POST"],
-  },
+wss.on("connection", (ws) => {
+  ws.on("open", () => console.log("Opened!!!"));
+  ws.on("close", () => console.log("CLOSED!!!"));
+  ws.on("message", (message, isBinary) => {
+    console.log(message.toString(), isBinary);
+
+    //broadcasts new message to all clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message.toString());
+      }
+    });
+  });
 });
 
-//when a user connects to our socket server
-io.on("connection", (socket) => {
-  console.log(`User Connected: ${socket.id}`);
-
-  socket.on("chat_message", (msg) => {
-    console.log(msg);
-    io.emit("ping", msg); //we basically sent thesame message received in sockect conn back to the device :)
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User Disconnected", socket.id);
-  });
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
 server.listen(port, () => {
-  console.log("listening on *:3000");
+  console.log(`Listening to port ${port}`);
 });
